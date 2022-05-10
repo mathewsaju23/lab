@@ -1,0 +1,439 @@
+rr
+from copy import deepcopy
+
+
+n = int(input("Enter the number of processes: "))
+q = 5
+processes = []
+timeElapsed = 0
+queue = []
+process_copy = []
+order = []
+displayData = []
+
+for i in range(n):
+    process = {}
+    burst = int(input(f"Enter the burst time for process {i+1}: "))
+    arrival = int(input(f"Enter the arrival time for process {i+1}: "))
+    process['arrivalTime'] = arrival
+    process['burstTime'] = burst
+    process['id'] = i+1
+    process['status'] = False
+    processes.append(process)
+
+# Sort the processes array based on arrival time
+def sortBasedOnArrival():
+    global processes
+    processes = sorted(processes, key = lambda p:p["arrivalTime"])
+
+
+def scheduleProcess():
+    global processes,n, timeElapsed, process_copy, queue, q, order, displayData
+    timeElapsed = processes[0]["arrivalTime"]
+    process_copy = deepcopy(processes)
+    while True:
+        allDone = True
+        for pro in process_copy:
+            if pro["burstTime"] > 0:
+                allDone = False
+        if allDone:
+            break
+        setProcessArrival()
+        currentProcess = queue.pop(0)
+        for k in range(len(processes)):
+            if processes[k]["id"] == currentProcess["id"]:
+                index = k
+        if currentProcess["burstTime"] >= q:
+            currentProcess["burstTime"] -= q
+            timeElapsed += q
+        else:
+            timeElapsed += currentProcess["burstTime"]
+            currentProcess["burstTime"] = 0
+        if currentProcess["burstTime"] > 0:
+            setProcessArrival()
+            order.append(f"P[{currentProcess['id']+1}]")
+            queue.append(currentProcess)
+        else:
+            displayData.append([currentProcess["id"], currentProcess["arrivalTime"], processes[index]["burstTime"], timeElapsed - processes[index]["burstTime"] - currentProcess["arrivalTime"], timeElapsed - currentProcess["arrivalTime"], timeElapsed])
+
+def setProcessArrival():
+    global process_copy, timeElapsed, queue, order
+    for process in process_copy:
+        if process["arrivalTime"] <= timeElapsed and process["burstTime"] > 0 and process["status"] == False:
+            order.append(f"P[{process['id']+1}]")
+            process["status"] = True
+            queue.append(process)
+
+
+def displayTable():
+    global displayData,n
+    # Sort display data
+    totalWaitingTime = 0
+    totalTurnAroundTime = 0
+    displayData = sorted(displayData, key = lambda p:p[0])
+    print("Processes\tBurst Time\tArrival Time\tWaiting Time\tTurn-Around Time\tCompletion Time")
+    for data in displayData:
+        totalTurnAroundTime += data[4]
+        totalWaitingTime += data[3]
+        print(
+            f"P[{data[0]}]\t\t{data[2]}\t\t{data[1]}\t\t{data[3]}\t\t{data[4]}\t\t\t{data[5]}")
+    print(f"Average waiting time: {totalWaitingTime / n}")
+    print(f"Average turn around time: {totalTurnAroundTime / n}")
+
+sortBasedOnArrival()
+scheduleProcess()
+displayTable()
+
+
+
+
+
+
+
+
+fcfs
+class FCFS:
+    def _init_(self):
+        self.burst = []
+        self.arrival = []
+
+        self.n = int(input("Enter the number of processes: "))
+        for i in range(self.n):
+            self.burst.append(int(input(f"Enter the burst time of process {i+1}: ")))
+            self.arrival.append(int(input(f"Enter the arrival time of process {i+1}: ")))
+
+    def findWaitingTime(self):
+        self.waiting = [0] * self.n
+        total_waiting = self.arrival[0]
+        for i in range(self.n):
+            self.waiting[i] = total_waiting - self.arrival[i]
+            total_waiting += self.burst[i]
+
+    def findTurnAround(self):
+        self.turn_around = [0] * self.n
+        for i in range(self.n):
+            self.turn_around[i] = self.waiting[i] + self.burst[i]
+
+    def findCompletionTime(self):
+        self.completion = [0] * self.n
+        completion_time = self.arrival[0]
+        for i in range(self.n):
+            completion_time += self.burst[i]
+            self.completion[i] = completion_time
+
+    def printTable(self):
+        average_waiting = 0
+        average_turn_around = 0
+        print("Processes\tBurst Time\tArrival Time\tWaiting Time\tTurn-Around Time\tCompletion Time")
+        for i in range(self.n):
+            print(f"{i+1}\t\t{self.burst[i]}\t\t{self.arrival[i]}\t\t{self.waiting[i]}\t\t{self.turn_around[i]}\t\t\t{self.completion[i]}")
+            average_waiting += self.waiting[i]
+            average_turn_around += self.turn_around[i]
+        print(f"Average waiting time = {average_waiting/self.n:.5f}")
+        print(f"Average turn around time = {average_turn_around/self.n}")
+
+def main():
+    fcfs = FCFS()
+
+    fcfs.findWaitingTime()
+    fcfs.findTurnAround()
+    fcfs.findCompletionTime()
+    fcfs.printTable()
+
+if _name_ == "_main_":
+    main()
+    
+    
+ sjf
+ 
+ # Get user input of number of processes
+n = int(input("Enter the number of processes: "))
+processes = []
+
+# Input the burst time and arrival time for the processes
+for i in range(n):
+    process = {}
+    burst =  int(input(f"Enter the burst time for process {i+1}: "))
+    arrival = int(input(f"Enter the arrival time for process {i+1}: "))
+    process["burstTime"] = burst
+    process["arrivalTime"] = arrival
+    process["id"] = i + 1
+    processes.append(process)
+
+# Sort the processes array based on arrival time
+def sortBasedOnArrival():
+    global processes
+    processes = sorted(processes, key = lambda p:p["arrivalTime"])
+    
+# Get the execution time
+def getExecutionOrder():
+    global processes, n
+    temp_order = processes
+    queue = []
+    executionTime = processes[0]["arrivalTime"]
+    while len(queue) != n:
+        minIndex = 9999
+        minBurst = 9999
+        # Find the index with the process with min burst time and arrival time has not ellapsed
+        for j in range(len(temp_order)):
+            if temp_order[j]["burstTime"] < minBurst and temp_order[j]["arrivalTime"] <= executionTime:
+                minIndex = j
+                minBurst = temp_order[j]["burstTime"]
+        executionTime += temp_order[minIndex]['burstTime']
+        temp_order[minIndex]["completionTime"] = executionTime
+        temp_order[minIndex]["waitingTime"] = executionTime - temp_order[minIndex]["burstTime"] - temp_order[minIndex]["arrivalTime"]
+        temp_order[minIndex]["turnAroundTime"] = executionTime - temp_order[minIndex]["arrivalTime"]
+        queue.append(temp_order[minIndex])
+        temp_order.pop(minIndex)
+    processes = queue
+
+def printData():
+    global processes, n
+    average_waiting = 0
+    average_turn_around = 0
+    print("Processes\tBurst Time\tArrival Time\tWaiting Time\tTurn-Around Time\tCompletion Time")
+    for i in range(n):
+        print(processes[i])
+        average_waiting += processes[i]["waitingTime"]
+        average_turn_around += processes[i]["turnAroundTime"]
+        print(f'{processes[i]["id"]}\t\t{processes[i]["burstTime"]}\t\t{processes[i]["arrivalTime"]}\t\t{processes[i]["waitingTime"]}\t\t{processes[i]["turnAroundTime"]}\t\t\t{processes[i]["completionTime"]}')
+    print(f"Average waiting time = {average_waiting/n:.5f}")
+    print(f"Average turn around time = {average_turn_around/n}")
+
+sortBasedOnArrival()
+getExecutionOrder()
+printData()
+
+
+
+
+
+
+
+
+
+
+fcfs
+
+class FCFS:
+    def __init__(self):
+        self.burst = []
+        self.arrival = []
+
+        self.n = int(input("Enter the number of processes: "))
+        for i in range(self.n):
+            self.burst.append(
+                int(input(f"Enter the burst time of process {i+1}: ")))
+            self.arrival.append(
+                int(input(f"Enter the arrival time of process {i+1}: ")))
+
+    def findWaitingTime(self):
+        self.waiting = [0] * self.n
+        total_waiting = self.arrival[0]
+        for i in range(self.n):
+            self.waiting[i] = total_waiting - self.arrival[i]
+            total_waiting += self.burst[i]
+
+    def findTurnAround(self):
+        self.turn_around = [0] * self.n
+        for i in range(self.n):
+            self.turn_around[i] = self.waiting[i] + self.burst[i]
+
+    def findCompletionTime(self):
+        self.completion = [0] * self.n
+        completion_time = self.arrival[0]
+        for i in range(self.n):
+            completion_time += self.burst[i]
+            self.completion[i] = completion_time
+
+    def printTable(self):
+        average_waiting = 0
+        average_turn_around = 0
+        print("Processes\tBurst Time\tArrival Time\tWaiting Time\tTurn-Around Time\tCompletion Time")
+        for i in range(self.n):
+            print(
+                f"{i+1}\t\t{self.burst[i]}\t\t{self.arrival[i]}\t\t{self.waiting[i]}\t\t{self.turn_around[i]}\t\t\t{self.completion[i]}")
+            average_waiting += self.waiting[i]
+            average_turn_around += self.turn_around[i]
+        print(f"Average waiting time = {average_waiting/self.n:.5f}")
+        print(f"Average turn around time = {average_turn_around/self.n}")
+
+
+def main():
+    fcfs = FCFS()
+
+    fcfs.findWaitingTime()
+
+    fcfs.findTurnAround()
+    fcfs.findCompletionTime()
+    fcfs.printTable()
+
+
+if __name__ == "__main__":
+    main()
+sjf
+from xmlrpc.client import MAXINT
+from itertools import chain
+
+
+class SJF:
+    def __init__(self):
+        self.order = []
+        self.n = int(input("Enter the number of processes: "))
+
+        for i in range(self.n):
+            burst = int(input(f"Enter the burst time of process {i+1}: "))
+            arrival = int(input(f"Enter the arrival time of process {i+1}: "))
+            self.order.append([burst, arrival, i+1])
+
+    def sortArrival(self):
+        for i in range(self.n):
+            for j in range(i, self.n - i - 1):
+                if self.order[j][1] == self.order[j+1][1]:
+                    if self.order[j][0] > self.order[j+1][0]:
+                        self.swap(j)
+                elif self.order[j][1] > self.order[j+1][1]:
+                    self.swap(j)
+
+    def swap(self, j):
+        temp = self.order[j]
+        self.order[j] = self.order[j+1]
+        self.order[j+1] = temp
+
+    def findExecutionOrder(self):
+        queue = []
+        temp_order = self.order.copy()
+        time_elapsed = 0
+
+        while len(queue) != self.n:
+            try:
+                min_index = MAXINT
+                min_burst = MAXINT
+                for j in range(len(temp_order)):
+                    if temp_order[j][0] < min_burst and temp_order[j][1] <= time_elapsed:
+                        min_index = j
+                        min_burst = temp_order[j][0]
+                time_elapsed += temp_order[min_index][0]
+                completion = [time_elapsed]
+                waiting = [time_elapsed - temp_order[min_index]
+                           [0] - temp_order[min_index][1]]
+                turn_around = [time_elapsed - temp_order[min_index][1]]
+                queue.append(
+                    list(chain(temp_order[min_index], waiting, turn_around, completion)))
+                temp_order.pop(min_index)
+            except IndexError as e:
+                time_elapsed += 1
+        self.order = queue.copy()
+
+    def printTable(self):
+        average_waiting = 0
+        average_turn_around = 0
+        print("Processes\tBurst Time\tArrival Time\tWaiting Time\tTurn-Around Time\tCompletion Time")
+        for i in range(self.n):
+            average_waiting += self.order[i][3]
+            average_turn_around += self.order[i][4]
+            print(
+                f"{self.order[i][2]}\t\t{self.order[i][0]}\t\t{self.order[i][1]}\t\t{self.order[i][3]}\t\t{self.order[i][4]}\t\t\t{self.order[i][5]}")
+        print(f"Average waiting time = {average_waiting/self.n:.5f}")
+        print(f"Average turn around time = {average_turn_around/self.n}")
+
+
+def main():
+    sjf = SJF()
+    sjf.sortArrival()
+    sjf.findExecutionOrder()
+    sjf.printTable()
+
+
+if __name__ == "__main__":
+    main()
+
+rr
+import copy
+
+
+class RR:
+    def __init__(self):
+        self.ready_queue = []
+        self.processes = []
+        self.quantum = 2
+
+        print("Round Robin Scheduling with Quantum 2ns")
+        self.n = int(input("Enter the number of processes: "))
+        for i in range(self.n):
+            arrival = int(input(f"Enter the arrival time for process {i+1}: "))
+            burst = int(input(f"Enter the burst time for process {i+1}: "))
+            self.processes.append([i, arrival, burst, False])
+
+    def sort(self, index):
+        for i in range(len(self.processes)):
+            for j in range(0, len(self.processes) - i - 1):
+                if self.processes[j][index] > self.processes[j+1][index]:
+                    temp = self.processes[j]
+                    self.processes[j] = self.processes[j+1]
+                    self.processes[j+1] = temp
+
+    def roundRobinScheduling(self):
+        self.time_elapsed = self.processes[0][1]
+        self.processes_copy = copy.deepcopy(self.processes)
+        self.display_data = []
+        self.order = []
+        while True:
+            all_done = True
+            for process in self.processes_copy:
+                if process[2] > 0:
+                    all_done = False
+            if all_done:
+                break
+            self.setProcessArrival()
+            current_process = self.ready_queue.pop(0)
+            for i in range(len(self.processes)):
+                if self.processes[i][0] == current_process[0]:
+                    index = i
+            if self.processes_copy[index][2] < self.quantum:
+                self.time_elapsed += self.processes_copy[index][2]
+                self.processes_copy[index][2] = 0
+            else:
+                self.processes_copy[index][2] -= self.quantum
+                self.time_elapsed += self.quantum
+            if self.processes_copy[index][2] > 0:
+                self.setProcessArrival()
+                self.order.append(f"P[{index+1}]")
+                self.ready_queue.append(self.processes_copy[index])
+            else:
+                self.display_data.append([index+1, self.processes[index][1], self.processes[index][2], self.time_elapsed -
+                                         self.processes[index][2] - current_process[1], self.time_elapsed - current_process[1], self.time_elapsed])
+
+    def setProcessArrival(self):
+        for process in self.processes_copy:
+            if process[1] <= self.time_elapsed and process[2] > 0 and process[3] == False:
+                self.order.append(f"P[{process[0]+1}]")
+                process[3] = True
+                self.ready_queue.append(process)
+
+    def displayTable(self):
+        # Sort display data
+        for i in range(len(self.display_data)):
+            for j in range(0, len(self.display_data) - i - 1):
+                if self.display_data[j][0] > self.display_data[j+1][0]:
+                    temp = self.display_data[j]
+                    self.display_data[j] = self.display_data[j+1]
+                    self.display_data[j+1] = temp
+                    print("Sorting")
+        print("Processes\tBurst Time\tArrival Time\tWaiting Time\tTurn-Around Time\tCompletion Time")
+        for data in self.display_data:
+            print(
+                f"P[{data[0]}]\t\t{data[2]}\t\t{data[1]}\t\t{data[3]}\t\t{data[4]}\t\t\t{data[5]}")
+
+
+def main():
+    rr = RR()
+    rr.sort(1)
+    rr.roundRobinScheduling()
+    rr.displayTable()
+
+
+if __name__ == "__main__":
+    main()
+
+
