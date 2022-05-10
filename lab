@@ -1,0 +1,550 @@
+
+leap
+import os
+r1, w1 = os.pipe()
+r2, w2 = os.pipe()
+pid = os.fork()
+
+if pid:
+    # parent
+    os.close(r1)
+    os.close(w2)
+    w1 = os.fdopen(w1, 'w')
+    print('Parent w')
+    year = input('Enter the year: ')
+    w1.write(str(year))
+    w1.close()
+    r2 = os.fdopen(r2)
+    yes = r2.read()
+    print('Parent r')
+    if(int(yes) == 1):
+        print('Leap Year')
+    else:
+        print('Not a leap year')
+    r2.close()
+
+
+else:
+    # child
+    os.close(r2)
+    os.close(w1)
+    r1 = os.fdopen(r1)
+    print('child r')
+    year = int(r1.read())
+    if((year % 100) == 0):
+        if((year % 400) == 0):
+            yes = 1
+        else:
+            yes = 0
+    else:
+        if((year % 4) == 0):
+            yes = 1
+        else:
+            yes = 0
+    r1.close()
+    w2 = os.fdopen(w2, 'w')
+    print('child w')
+    w2.write(str(yes))
+    w2.close()
+    
+    
+    
+   
+
+
+
+
+
+
+
+
+
+
+
+otp
+
+import os
+
+OTP = 123456
+
+def main():
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    r3, w3 = os.pipe()
+
+    pid = os.fork()
+
+    if pid:
+        os.close(r1)
+        os.close(w2)
+        os.close(r3)
+
+        w1 = os.fdopen(w1, "w")
+        w1.write(str(OTP))
+        w1.close()
+
+        r2 = os.fdopen(r2)
+        res = r2.read()
+        r2.close()
+
+        w3 = os.fdopen(w3, "w")
+        if(len(res) == 6 ):
+            if(int(res) == OTP):
+                w3.write("Transaction Approved")
+            else:
+                w3.write("Transaction Rejected")
+        else:
+            w3.write("OTP should be 6 digits")
+        w3.close()
+
+    
+    else:
+        os.close(w1)
+        os.close(r2)
+        os.close(w3)
+
+        r1 = os.fdopen(r1)
+        r1.read()
+        r1.close()
+
+        otp = input("Enter the otp: ")
+        w2 = os.fdopen(w2, "w")
+        w2.write(otp)
+        w2.close()
+
+        r3 = os.fdopen(r3)
+        res = r3.read()
+
+        print(res)
+
+
+main()
+
+namesfull
+import os
+
+r1, w1 = os.pipe()
+r2, w2 = os.pipe()
+pid = os.fork()
+
+if pid:
+    os.close(r1)
+    os.close(w2)
+    n = int(input("Enter no of names: "))
+    names = []
+    for i in range(n):
+        names.append(input("Enter the name: "))
+    w1 = os.fdopen(w1, "w")
+    w1.write(str(names))
+    w1.close()
+
+    r2 = os.fdopen(r2)
+    verif_str = r2.read()
+    verif_list = verif_str[1: len(verif_str) - 1].split(", ")
+    for verif_msg in verif_list:
+        print(verif_msg)
+    r2.close()
+
+else:
+    os.close(r2)
+    os.close(w1)
+    r1 = os.fdopen(r1)
+    names_str = r1.read()
+    r1.close()
+    names_list = names_str[1: len(names_str) - 1].split(", ")
+    verif_list = []
+    for name in names_list:
+        isAllAlphaNum = True
+        name = name[1: len(name) - 1]
+        for charac in name:
+            if not charac.isalnum():
+                isAllAlphaNum = False
+        if len(name) < 5 or len(name) > 8:
+            verif_list.append("Name's length is not btw 5 and 8")
+        elif not name[0].isalpha():
+            verif_list.append("Name's first char is not alphabet")
+        elif not isAllAlphaNum:
+            verif_list.append(
+                "Name's characters must only contain alpha or numericals")
+        else:
+            verif_list.append("Name is of correct format")
+
+    w2 = os.fdopen(w2, "w")
+    w2.write(str(verif_list))
+    w2.close()
+
+
+
+names
+import os
+
+n = int(input("Enter the number of names"))
+
+
+r1, w1 = os.pipe()
+r2, w2 = os.pipe()
+
+pid = os.fork()
+
+if pid:
+    os.close(r1)
+    os.close(w2)
+    w1 = os.fdopen(w1, "w")
+    names = []
+    for i in range(n):
+        names.append(input("Enter the name : "))
+
+    w1.write(",".join(names))
+    w1.close()
+    r2 = os.fdopen(r2)
+    pnew = r2.read()
+    print(pnew)
+    r2.close()
+
+
+else:
+    os.close(w1)
+    os.close(r2)
+    r1 = os.fdopen(r1, "r")
+    cnames = (r1.read()).split(",")
+    new = []
+    for name in cnames:
+        valid = True
+        for i in name:
+            if not i.isalnum():
+                valid = False
+        if not (len(name) >= 5 and len(name) <= 8):
+            valid = False
+
+        if valid:
+            new.append(name)
+        else:
+            new.append("invalid name")
+
+    r1.close()
+    w2 = os.fdopen(w2, "w")
+    w2.write(",".join(new))
+    w2.close()
+
+
+
+
+
+
+import os
+
+
+def main():
+    n = int(input(
+        "Enter the number of numbers to be sent from parent process to child process: "))
+    r, w = os.pipe()
+    pid = os.fork()
+
+    if pid:
+        os.close(r)
+        w = os.fdopen(w, "w")
+        for i in range(n):
+            num = input(f"Enter number {i+1}: ")
+            w.write(num)
+        w.close()
+    else:
+        os.close(w)
+        r = os.fdopen(r)
+        number = r.read()
+        print("Child Process Reads: ", number)
+        r.close()
+
+
+if __name__ == "__main__":
+    main()
+
+
+rev
+
+import os
+
+r1, w1 = os.pipe()
+r2, w2 = os.pipe()
+
+pid = os.fork()
+
+if pid:
+    os.close(r1)
+    os.close(w2)
+    w1 = os.fdopen(w1, 'w')
+    string = input("Enter the string to be reverse: ")
+    w1.write(string)
+    w1.close()
+    r2 = os.fdopen(r2)
+    rev = r2.read()
+    print(f"The reversed string is: {rev}")
+    r2.close()
+
+else:
+    os.close(w1)
+    os.close(r2)
+    r1 = os.fdopen(r1)
+    str = r1.read()
+    r1.close()
+    rev = str[::-1]
+    w2 = os.fdopen(w2,'w')
+    w2.write(rev)
+    w2.close()
+    
+    
+    
+    
+    
+    
+
+pali
+import os
+
+
+def main():
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    pid = os.fork()
+
+    if pid:
+        os.close(r1)
+        os.close(w2)
+        w1 = os.fdopen(w1, "w")
+        string = input("Enter the string: ")
+        w1.write(string)
+        w1.close()
+        r2 = os.fdopen(r2)
+        string = r2.read()
+        print(f"Parent reads: {string}")
+        r2.close()
+    else:
+        os.close(w1)
+        os.close(r2)
+        r1 = os.fdopen(r1)
+        string = r1.read()
+        print(f"Child reads: {string}")
+        palindrome = True
+        j = 0
+        for i in range(len(string) - 1, 0, -1):
+            if string[i] != string[j]:
+                palindrome = False
+                break
+            j += 1
+        w2 = os.fdopen(w2, 'w')
+        if palindrome:
+            w2.write(f"{string} is palindrome")
+        else:
+            w2.write(f"{string} is not palindrome")
+        r1.close()
+        w2.close()
+
+
+if __name__ == "__main__":
+    main()
+
+prime
+
+
+import os
+
+
+def main():
+    n = int(input("Enter the number of numbers: "))
+
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    pid = os.fork()
+
+    if pid:
+        os.close(r1)
+        os.close(w2)
+        w1 = os.fdopen(w1, "w")
+        for i in range(n):
+            number = input(f"Enter number {i+1}: ")
+            w1.write(f"{number},")
+        w1.close()
+        r2 = os.fdopen(r2)
+        string = r2.read()
+        print(f"Parent reads: {string}")
+        r2.close()
+    else:
+        os.close(w1)
+        os.close(r2)
+        r1 = os.fdopen(r1)
+        number_string = r1.read()
+        print(f"Child reads: {number_string}")
+        prime = []
+        is_prime = True
+        numbers = number_string.split(",")
+        numbers.pop()  # Remove the last empty string from the list of numbers
+        for i in numbers:
+            is_prime = True
+            for j in range(2, int(i)):
+                if int(i) % j == 0:
+                    is_prime = False
+                    break
+            if is_prime:
+                prime.append(i)
+        r1.close()
+        w2 = os.fdopen(w2, 'w')
+        w2.write(",".join(prime))
+        w2.close()
+
+
+if __name__ == "__main__":
+    main()
+
+
+fact
+
+#! /bin/bash
+
+echo Program by Mathew
+
+read -p "Enter the value of n:" N
+FACTORIAL=1
+
+while [ $N != 0 ]
+do
+	
+	FACTORIAL=$((FACTORIAL * N))
+	N=`expr $N - 1`
+done
+
+echo "Factorial: $FACTORIAL" 
+
+
+rev
+
+s="Hello World"
+strlen=${#s}
+for (( i=$strlen-1; i>=0; i-- ));
+do
+    revstr=$revstr${s:$i:1}
+done
+echo "Original String : $s"
+echo "Reversed String : $revstr"
+
+fibo
+#! /bin/bash
+
+echo "Shell Script by Mathew"
+
+read -p "Enter the number of numbers in the series: " N
+
+A=0
+B=1
+C=1
+
+echo $A
+if [ $N != 1 ]
+then
+	echo $B
+fi
+N=`expr $N - 2`
+
+while [ $N -gt 0 ]
+do
+	echo $C
+	A=$B
+	B=$C
+	C=$((A + B))
+        N=`expr $N - 1`	
+done
+
+sumn
+#! /bin/bash
+
+
+
+read -p "Enter the value of n: " N
+
+SUM=0
+
+while [ $N != 0 ]
+do
+	echo "Enter number: " 
+	read VAL
+	SUM=`expr $SUM + $VAL`
+	N=`expr $N - 1`
+done
+
+echo "SUM: $SUM"
+
+sum even
+echo "enter limit"
+read n
+i=2
+while [ $i -lt $n ]
+do
+sum=$((sum+i))
+i=$((i+2))
+done
+echo "sum:"$sum
+pali
+#! /bin/bash
+
+echo Program done by Abhinav Rajesh 20219003
+echo "Enter the string:" 
+read STRING
+
+LENGTH=${#STRING}
+REVERSE=""
+
+for (( i=$LENGTH-1; i>=0; i-- ))
+do
+	REVERSE="$REVERSE${STRING:$i:1}"
+done
+
+if [ $STRING == $REVERSE ]
+then
+	echo "$STRING is palindrome"
+else
+	echo "$STRING is not palindrome"
+fi
+
+vowels
+
+#!/bin/bash
+
+clear
+echo
+read str
+len=$(expr length $str)
+count=0
+while [ $len -gt 0 ]
+do
+   ch=$(echo $str | cut -c $len)
+   case $ch in
+      [aeiouAEIOU] )
+         count=$(($count + 1))
+         echo $ch
+      ;;
+   esac
+   len=$(( $len - 1 ))
+done
+echo $count
+
+leap
+#! /bin/bash
+echo "Enter a year"
+read y
+if [ `expr $y % 100` == 0 ]
+then
+    if [ `expr $y % 400` == 0 ]
+    then
+    echo "$y is leap"
+    else
+    echo "$y is not leap"
+    fi
+else
+    if [ `expr $y % 4` == 0 ]
+    then
+    echo "$y is leap"
+    else
+    echo "$y is not leap"
+    fi
+fi
+
+
+
